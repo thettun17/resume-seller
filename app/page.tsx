@@ -7,51 +7,66 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function Home() {
   const contentRef = useRef<HTMLDivElement>(null);
-  const [previewImg, setPreviewImg] = useState<string | null>(null);
-
-  const generatePreview = async () => {
-    const element = contentRef.current;
-
-    if (!element) return;
-
-    // Capture the HTML as canvas
-    const canvas = await html2canvas(element, { useCORS: true });
-    const imgData = canvas.toDataURL("image/png");
-
-    // Set the image data as the preview
-    setPreviewImg(imgData);
-  };
 
   const downloadPdf = async () => {
-    const element = contentRef.current;
+    const content = contentRef.current?.outerHTML;
+    const styles = Array.from(document.styleSheets)
+      .map((sheet) => {
+        try {
+          return Array.from(sheet.cssRules)
+            .map((rule) => rule.cssText)
+            .join("");
+        } catch (err) {
+          console.warn("Could not load some CSS rules:", err);
+          return "";
+        }
+      })
+      .join("\n");
 
-    if (!element) return;
+    if (!content || !styles) return;
 
-    // Capture the HTML as canvas
-    const canvas = await html2canvas(element, { useCORS: true });
-    const imgData = canvas.toDataURL("image/png");
+    const htmlWithStyles = `
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>${styles}</style>
+        </head>
+        <body>${content}</body>
+      </html>
+    `;
 
-    // Initialize jsPDF
-    const pdf = new jsPDF("p", "mm", "a4");
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+    const response = await fetch("/api/generate-pdf", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ htmlContent: htmlWithStyles }),
+    });
 
-    // Add image to PDF
-    pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-    pdf.save("document.pdf");
+    if (response.ok) {
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "resume.pdf";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      console.error("Failed to generate PDF.");
+    }
   };
 
   return (
-    <ResizablePanelGroup direction="horizontal">
+    <ResizablePanelGroup direction="horizontal" className="bg-[#edeeee]">
       <ResizablePanel defaultSize={35}>One</ResizablePanel>
       <ResizableHandle withHandle />
-      <ResizablePanel defaultSize={65}>
+      <ResizablePanel defaultSize={65} className="mb-3">
         <div className="mx-3 relative h-full">
           <ScrollArea className="h-full">
             <Default ref={contentRef} />

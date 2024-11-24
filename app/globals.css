@@ -77,22 +77,3 @@ body {
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-}
-
-.a4-size {
-  @apply w-[210mm] min-h-[297mm] h-[297mm] bg-white border border-gray-300 shadow-md mx-auto;
-}
-
-.wave {
-  height: 250px;
-  background: linear-gradient(to bottom, #ff7f50, #ff6347, #f44336);
-  clip-path: circle(75.0% at 50% 24%);
-}
