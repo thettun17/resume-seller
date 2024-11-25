@@ -35,7 +35,16 @@ export default function Home() {
         <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <style>${styles}</style>
+          <style>
+            ${styles}
+            @media print {
+              @page :second {
+                margin: 2cm;
+                /* Styles for the second page */
+                background-color: lightgreen;
+              }
+            }
+          </style>
         </head>
         <body>${content}</body>
       </html>
@@ -69,7 +78,9 @@ export default function Home() {
       <ResizablePanel defaultSize={65} className="mb-3">
         <div className="mx-3 relative h-full">
           <ScrollArea className="h-full">
-            <Default ref={contentRef} />
+            <div className="w-[210mm] mx-auto">
+              <Default ref={contentRef} />
+            </div>
           </ScrollArea>
           <div className="absolute bottom-2 left-0 right-0 rounded-lg bg-green-600 p-6">
             <div className="grid grid-cols-3 items-center">
